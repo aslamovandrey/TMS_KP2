@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'docker:latest'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     environment {
         // Определите IP вашей ВМ. Важно: добавьте этот IP в "Inventory" Ansible на Jenkins-сервере
@@ -18,7 +23,9 @@ pipeline {
             steps {
                 script {
                     // Собираем образ приложения локально в Jenkins (или на агенте)
-                    docker.build("quote-generator:build-${env.BUILD_NUMBER}", "./app")
+                    sh """
+                        docker build -t quote-generator:build-${BUILD_NUMBER} ./app
+                    """
                 }
             }
         }
@@ -26,14 +33,13 @@ pipeline {
         stage('Health Check Test') {
             steps {
                 script {
-                    // Запускаем контейнер для проверки эндпоинта /health
-                    def testContainer = docker.image("quote-generator:build-${env.BUILD_NUMBER}").run("-d -p 5001:5000")
-                    // Ждем пару секунд для инициализации приложения
-                    sh 'sleep 5'
-                    // Проверяем, что health-check возвращает успешный код (200)
-                    sh 'curl --fail http://localhost:5001/health'
-                    // Останавливаем и удаляем тестовый контейнер
-                    testContainer.stop()
+                    sh """
+                        docker run -d --name test-quote -p 5001:5000 quote-generator:build-${BUILD_NUMBER}
+                        sleep 5
+                        curl --fail http://localhost:5001/health
+                        docker stop test-quote
+                        docker rm test-quote
+                    """
                 }
             }
         }
