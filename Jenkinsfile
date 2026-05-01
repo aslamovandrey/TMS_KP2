@@ -25,7 +25,7 @@ pipeline {
                         scp -o StrictHostKeyChecking=no -r ./app ${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/
                         
                         echo "=== Сборка и деплой на сервере ==="
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
                             cd /home/${DEPLOY_USER}
                             
                             # Останавливаем старые контейнеры (если есть)
@@ -45,7 +45,7 @@ pipeline {
                             
                             echo ""
                             echo "=== Деплой успешно завершен! ==="
-                        EOF
+                        '
                     """
                 }
             }
