@@ -18,7 +18,7 @@ pipeline {
             steps {
                 // Используем SSH для выполнения команд на хостовой VM
                 sshagent(['ansible-ssh-key']) {
-                    sh '''
+                    sh """
                         echo "=== Копируем файлы на сервер ==="
                         scp -o StrictHostKeyChecking=no docker-compose.yml ${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/
                         scp -o StrictHostKeyChecking=no -r ./app ${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/
@@ -45,7 +45,7 @@ pipeline {
                             echo ""
                             echo "=== Деплой успешно завершен! ==="
                         EOF
-                    '''
+                    """
                 }
             }
         }
