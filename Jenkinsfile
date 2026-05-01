@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker:latest'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
         // Определите IP вашей ВМ. Важно: добавьте этот IP в "Inventory" Ansible на Jenkins-сервере
