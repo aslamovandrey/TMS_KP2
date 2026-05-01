@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  quote-app-1:
+    build: ./app
+    container_name: quote-generator-1
+    restart: unless-stopped # restart policy
+    networks:
+      - app-network
+    # Порт не публикуем, чтобы использовать встроенный балансировщик компоуза
+
+  quote-app-2:
+    build: ./app
+    container_name: quote-generator-2
+    restart: unless-stopped # restart policy
+    networks:
+      - app-network
+
+  # Простой балансировщик на основе nginx для демонстрации
+  load-balancer:
+    image: nginx:alpine
+    container_name: app-load-balancer
+    restart: unless-stopped # restart policy
+    ports:
+      - "5000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - quote-app-1
+      - quote-app-2
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

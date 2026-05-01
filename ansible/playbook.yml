@@ -1,0 +1,71 @@
+- name: Configure DevOps VM
+  hosts: servers
+  become: yes
+  vars:
+    jenkins_image: jenkins/jenkins:lts
+    jenkins_container_name: jenkins
+    jenkins_host_port: 8080
+    jenkins_container_port: 8080
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required system packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    # --- Установка Docker ---
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin # Установим Docker Compose V2
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker service is running and enabled
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    # --- Конфигурация пользователя для Docker ---
+    - name: Add user 'andrew' to 'docker' group
+      user:
+        name: andrew
+        groups: docker
+        append: yes
+      # Примечание: изменения вступят в силу при следующем подключении по SSH
+
+    # --- Запуск Jenkins в контейнере ---
+    - name: Run Jenkins container
+      docker_container:
+        name: "{{ jenkins_container_name }}"
+        image: "{{ jenkins_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ jenkins_host_port }}:{{ jenkins_container_port }}"
+        volumes:
+          - jenkins_home:/var/jenkins_home
+        env:
+          JAVA_OPTS: "-Djenkins.install.runSetupWizard=true"
