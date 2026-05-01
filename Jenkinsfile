@@ -21,11 +21,18 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    // Собираем образ приложения локально в Jenkins (или на агенте)
-                    sh """
-                        docker build -t quote-generator:build-${BUILD_NUMBER} ./app
-                    """
+                // Вместо docker build локально, копируем на ВМ и собираем там
+                sshagent(['ansible-ssh-key']) {
+                    sh '''
+                        # Создаем директорию на ВМ
+                        ssh -o StrictHostKeyChecking=no andrew@${DEPLOY_HOST} "mkdir -p /home/andrew/app_builds/build-${BUILD_NUMBER}"
+                        
+                        # Копируем файлы приложения
+                        scp -r ./app/* andrew@${DEPLOY_HOST}:/home/andrew/app_builds/build-${BUILD_NUMBER}/
+                        
+                        # Собираем образ на ВМ
+                        ssh andrew@${DEPLOY_HOST} "cd /home/andrew/app_builds/build-${BUILD_NUMBER} && docker build -t quote-generator:build-${BUILD_NUMBER} ."
+                    '''
                 }
             }
         }
