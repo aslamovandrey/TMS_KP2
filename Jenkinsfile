@@ -21,6 +21,7 @@ pipeline {
                     sh """
                         echo "=== Копируем файлы на сервер ==="
                         scp -o StrictHostKeyChecking=no docker-compose.yml ${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/
+                        scp -o StrictHostKeyChecking=no nginx.conf ${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/
                         scp -o StrictHostKeyChecking=no -r ./app ${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/
                         
                         echo "=== Сборка и деплой на сервере ==="
