@@ -39,6 +39,7 @@
           - docker-ce-cli
           - containerd.io
           - docker-compose-plugin # Установим Docker Compose V2
+          - docker-compose    # пока не поставил V1 ничего не заработало
         state: present
         update_cache: yes
 
